@@ -5,7 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h>
-
+#include<sys/wait.h>
 
 int main(int argc,char* argv[]){
    
@@ -14,15 +14,15 @@ int main(int argc,char* argv[]){
         exit(EXIT_FAILURE);
     }
     else{
-        int pid=fork();
-        if(pid==-1){
-            perror("failed");
-        }
-        else if(pid==0){
-            for(int i=1;i<argc;i++){
-                    printf("working ");
-                    struct stat buff;
-                    lstat(argv[i],&buff);
+       for(int i=1;i<argc;i++){
+            pid_t   pid=fork();
+            if(pid==-1){
+                perror("failed");
+            }
+            else if(pid==0){
+                printf("working ");
+                struct stat buff;
+                lstat(argv[i],&buff);
                 if(S_ISREG(buff.st_mode)){
                     printf("regular file\n");
                     printf("Menu:\n");
@@ -34,9 +34,9 @@ int main(int argc,char* argv[]){
                     printf("-l (create a sym link give: link name)\n");
                     char option[2];
                     scanf("%s",option);
-                    printf("%s",option);
-                    fflush(stdout);
-                    gets(option);
+                   // printf("%s",option);
+                    //fflush(stdout);
+                    //gets(option);
                     if(strcmp(option,"-n")==0){
                         printf("file name:%s \n",argv[i]);
                     }
@@ -68,8 +68,27 @@ int main(int argc,char* argv[]){
                         scanf("%s",linkName);
                         symlink(argv[i],linkName);
                     }        
-        
-                    
+                    if(strstr(argv[i],".c")){
+                        pid=fork();
+                        if(pid<0){
+                            perror("error");
+                        }
+                        else if(pid==0){
+                            execlp("./script.sh","./script.sh",argv[i],NULL);
+                            perror("error");
+                        }
+                        else{
+                            int status;
+                            int w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+                            if (w == -1) {
+                                perror("waitpid");
+                                exit(EXIT_FAILURE);
+                            }
+                            if (WIFEXITED(status)) {
+                                printf("\nexited, status=%d\n%d", WEXITSTATUS(status),w);
+                            }
+                        }
+                    }
                 }
                 else if(S_ISDIR(buff.st_mode)){
                     printf("directory\n");
@@ -99,7 +118,6 @@ int main(int argc,char* argv[]){
                         if(S_IROTH & buff.st_mode) printf("-e\n");
                         else printf("-");
                     }
-                
                     if(strcmp(option,"-c")==0){
                         struct dirent *directory;
                         DIR *dir;
@@ -109,7 +127,35 @@ int main(int argc,char* argv[]){
                             snprintf(names,sizeof(names),"%s/%s",argv[i],directory->d_name);
                         }
                     }
+                    pid=fork();
+                    if(pid<0){
+                        perror("eror");
+                    }
+                    else if(pid==0){
+                        char filename[30];
+                        snprintf(filename,sizeof(filename),"%s/%s",argv[i],"file.txt");
+                        FILE *f=fopen(filename,"w");
+                        if(f==NULL){
+                            perror("could not create file");
+                        }
+                        fclose(f);
+                        printf("%s",filename);
+                        exit(0);
+                        
+                    }
+                    else{
+                        int status;
+                        int w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+                        if (w == -1) {
+                            perror("waitpid");
+                            exit(EXIT_FAILURE);
+                        }
 
+                        if (WIFEXITED(status)) {
+                            printf("\nexited, status=%d\n%d", WEXITSTATUS(status),w);
+                        }
+                    }
+                    
 
                 }
                 else if(S_ISLNK(buff.st_mode)){
@@ -155,13 +201,21 @@ int main(int argc,char* argv[]){
                 else{
                     printf("not regular,directory or simbolik link file\n");
                 }
+                exit(0);
             }
-            exit(0);
-        }
-        else if(pid>0){
-            printf("parent processor");
-        }
+            else{
+                int status;
+                int w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+                if (w == -1) {
+                    perror("waitpid");
+                    exit(EXIT_FAILURE);
+                }
 
+                if (WIFEXITED(status)) {
+                    printf("\nexited, status=%d\n%d", WEXITSTATUS(status),w);
+                }
+            }  
+        }
     }
     return 0;
 }
