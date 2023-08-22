@@ -21,24 +21,6 @@ If one of the letters of the string is not a valid option an error message will 
 
 A) Regular file: name (-n), size (-d), hard link count (-h), time of last modification (-m), access rights (-a), create symbolic link (-l, this will wait for user input for the name of the link). The access rights will be displayed in the format:
 
-        User:
-
-        Read - yes
-        Write - yes
-        Exec - no
-
-        Group:
-
-        Read - yes
-        Write - no
-        Exec - no
-
-        Others:
-
-        Read - yes
-        Write - no
-        Exec - no
-
 B) Symbolic link: name (-n), delete symbolic link (-l), size of symbolic link (-d), size of target file (-t), access rights (-a). Note that if that the -l option is given, the other following options will no longer be performed
 
 C) Directory: name (-n), size (-d), access rights (-a), total number of files with the .c extension (-c)
@@ -46,16 +28,7 @@ C) Directory: name (-n), size (-d), access rights (-a), total number of files wi
 
 The parent process will create for each argument one child process that will handle the options introduced by the user (for each file type we have the corresponding options). Additionally to this child process, the parent process will create a second child process, whose functionality will be:
 
-If the argument is a regular file with the .c extension, the second child will execute a script. The output data of the script will be send to the parent process which will compute a score based on number of errors and warnings
-0 errors and 0 warnings: 10
-
-at least one error: 1
-
-no errors, but more than 10 warnings: 2
-
-no errors, but maximum 10 warnings: 2 + 8*(10 – number_of_warnings)/10.
-
-The parent should write the following message in a file named grades.txt: "<FILE_NAME>: <SCORE>".
+If the argument is a regular file with the .c extension, the second child will execute a script. 
 
 Script requirement: Having a regular file with the .c extension given as argument, the script should compile the file and print at standard output the number of errors and the number of warnings.
 If the argument is a regular file but doesn't have the .c extension, the second child should print the number of lines
