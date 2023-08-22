@@ -3,6 +3,7 @@
 
 
 Requirments:
+
 Write a C program, which uses system calls and library functions in Unix, that takes multiple arguments representing paths to regular files / directories / symbolic links.
 
 The program provides the following functionalities: 
